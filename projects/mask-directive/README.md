@@ -1,44 +1,44 @@
 # Installing
 
-Angular version 19.x.x
-
 $ npm install --save mask-directive
 
-Angular version 13.x.x
-
-$ npm install --save mask-directive@13
-
-# Quickstart if ngx-mask version < 19.0.0
+# Quickstart if mask-directive is STANDALONE
 
 import { MaskDirective } from 'mask-directive';
+import { NgModel } from '@angular/forms';
 
+---app.component.ts---
 @Component({
    selector: 'my-testing',
    templateUrl: './my-testing.component.html',
    styleUrls: ['./my-testing.component.css'],
    standalone: true,
    imports: [
-      MaskDirective,
-      MaskPipe   
+      MaskDirectiveModule
    ],
-   providers: [
-         (...)
-   ],
+   providers: [NgModel] // Adicionar NgModel
 })
 
-# Quickstart if ngx-mask version >= 13.0.0
+# Quickstart if mask-directive is used in module
 
 import { MaskDirective } from 'mask-directive';
 
+---app.module.ts---
 @NgModule({
-  imports: [
-   MaskDirective,
-   MaskPipe
-  ],
-  providers: [
-    (...)
-  ]
+    imports: [
+      MaskDirectiveModule
+   ]
 })
+
+---app.component.ts---
+@Component({
+   selector: 'my-testing',
+   templateUrl: './my-testing.component.html',
+   styleUrls: ['./my-testing.component.css'],
+   providers: [NgModel] // Adicionar NgModel
+})
+
+
 
 # Usage
 
