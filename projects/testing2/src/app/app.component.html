@@ -1,0 +1,7 @@
+<form [formGroup]="form">
+    <input libMask="000.000.000-00" formControlName="to" [dropSpecialCharacters]="true" (valueChange)="null" />
+</form>
+
+<h1>CPF do cliente: {{ cpf | libPipe: '000.000.000-00' }}</h1>
+
+<button (click)="click()">log cpf</button>
