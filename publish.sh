@@ -66,7 +66,7 @@ npm run build || { echo "Falha na build"; exit 1; }
 cd dist/mask-directive || { echo "Diretório não encontrado: dist/mask-directive"; exit 1; }
 
 # Publicar a library no npm
-npm publish --tag latest || { echo "Falha ao publicar"; exit 1; }
-#npm publish --tag angular-13 || { echo "Falha ao publicar"; exit 1; }
+#npm publish --tag latest || { echo "Falha ao publicar"; exit 1; }
+npm publish --tag angular-13 || { echo "Falha ao publicar"; exit 1; }
 
 echo "Library publicada com sucesso!"

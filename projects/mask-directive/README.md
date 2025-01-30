@@ -79,16 +79,34 @@ You can use the `mask-directive` with Angular's two-way binding to format inputs
 #### CPF Mask:
 ```html
 <input type="text" [(ngModel)]="cpf" libMask="000.000.000-00">
+console.log('Ex: 123.456.789-00')
 ```
 
 #### CNPJ Mask:
 ```html
 <input type="text" [(ngModel)]="cnpj" libMask="00.000.000/0000-00">
+console.log('Ex: 12.345.678/0001-90')
 ```
 
 #### CPF/CNPJ Dynamic Mask:
 ```html
 <input type="text" [(ngModel)]="cpfCnpj" libMask="000.000.000-00||00.000.000/0000-00">
+console.log('Ex: 123.456.789-00' or 'Ex: 12.345.678/0001-90')
+```
+
+#### dropSpecialCharacters (valueChanged) output:
+```html
+<input type="text" [(ngModel)]="cpfCnpj" libMask="000.000.000-00" [dropSpecialCharacters]="true"
+ (valueChanged)="cpfCnpj = $event">
+console.log('Ex: 12345678900')
+```
+
+```html
+<form [formGroup]="reactiveForm">
+   <input type="text" formControlName="cpfCnpj" libMask="000.000.000-00" [dropSpecialCharacters]="true"
+      (valueChanged)="reactiveForm.get('cpfCnpj').setValue($event)">
+</form>
+console.log('Ex: 12345678900')
 ```
 
 ### Using as a Pipe
