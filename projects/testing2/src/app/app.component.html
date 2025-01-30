@@ -1,7 +1,8 @@
 <form [formGroup]="form">
-    <input libMask="000.000.000-00" formControlName="to" [dropSpecialCharacters]="true" (valueChange)="null" />
+    <input libMask="(00) 0000-0000||(00) 00000-0000" formControlName="to" [dropSpecialCharacters]="true"
+        (valueChange)="form.get('to')!.setValue($event)" />
 </form>
 
-<h1>CPF do cliente: {{ cpf | libPipe: '000.000.000-00' }}</h1>
+<h1>Teletone do cliente: {{ form.get('to')!.value | libPipe: '(00) 0000-0000||(00) 00000-0000' }}</h1>
 
-<button (click)="click()">log cpf</button>
+<button (click)="click()">log Teletone</button>

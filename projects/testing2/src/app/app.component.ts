@@ -9,15 +9,15 @@ import { FormControl, FormGroup } from '@angular/forms';
 export class AppComponent {
 
   form = new FormGroup({
-    to: new FormControl('11123231232')
+    to: new FormControl('')
   })
   
   title = 'testing2';
-  cpf: string = '11123231232';
+  cpf: string = '';
 
 
   click() {
-    console.log(this.cpf);
+    console.log(this.form.value.to);
 
   }
 

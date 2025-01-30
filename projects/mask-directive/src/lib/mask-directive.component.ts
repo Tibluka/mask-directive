@@ -40,6 +40,7 @@ export class MaskDirective {
         }
       });
       const initialValue = this.ngControl.value.replace(/[^a-zA-Z0-9]/g, '');
+      if (!initialValue) return;
       const masks = this.mask.split('||');
       const selectedMask = this.selectMask(masks, initialValue.length);
       this.el.nativeElement.value = this.applyMask(initialValue, selectedMask);
@@ -75,7 +76,7 @@ export class MaskDirective {
     if (
       event.inputType == 'deleteContentBackward' || event.inputType == 'deleteContentForward'
     ) {
-      const value = this.el.nativeElement.value;
+      const value = this.el.nativeElement.value.trim(); // Elimina espaços vazios ao apagar conteúdo
       const lastChar = value.charAt(value.length - 1);
       if (!/[a-zA-Z0-9]/.test(lastChar)) {
         const updatedValue = value.substring(0, value.length - 1); // Remove o último caractere
