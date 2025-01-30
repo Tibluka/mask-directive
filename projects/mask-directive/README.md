@@ -7,13 +7,15 @@ A lightweight Angular library for applying masks to inputs and using them as pip
 
 To install the library, use the following commands depending on your Angular version:
 
-### For Angular 13
-```bash
-$ npm install --save mask-directive@13
-
 ### For Angular 18+
 ```bash
 $ npm install --save mask-directive@latest
+```
+
+### For Angular 13
+```bash
+$ npm install --save mask-directive@angular-13
+```
 
 ## Quickstart
 

@@ -1,11 +1,12 @@
 {
   "name": "mask-directive",
-  "version": "0.2.4",
+  "version": "0.2.14",
   "scripts": {
     "ng": "ng",
     "start": "ng serve testing2",
     "build": "ng build mask-directive",
     "watch": "ng build mask-directive --watch --configuration development",
+    "publish-npm": "./publish.sh",
     "test": "ng test"
   },
   "private": true,
