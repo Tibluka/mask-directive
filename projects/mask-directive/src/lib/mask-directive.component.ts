@@ -30,7 +30,6 @@ export class MaskDirective {
       });
     }
     if (this.ngControl?.control) {
-
       this.ngControl.control.valueChanges?.subscribe(value => {
         if (value) {
           const initialValue = value.replace(/[^a-zA-Z0-9]/g, '');
@@ -52,8 +51,11 @@ export class MaskDirective {
     const inputElement = this.el.nativeElement;
     let inputValue = inputElement.value.replace(/[^a-zA-Z0-9]/g, ''); // Valor sem caracteres inválidos
 
-    if (!this.mask) return;
+    if (!this.mask) {
+      return;
+    }
 
+    // Divide as máscaras pelo delimitador "||"
     const masks = this.mask.split('||');
     const selectedMask = this.selectMask(masks, inputValue.length);
 
@@ -62,42 +64,28 @@ export class MaskDirective {
       return;
     }
 
-    // Obtém a posição atual do cursor
-    const cursorPosition = inputElement.selectionStart || 0;
-    const prevValue = inputElement.value;
-
     inputElement.value = this.applyMask(inputValue, selectedMask);
 
+    // Atualiza o valor limpo, sem caracteres especiais, se dropSpecialCharacters for true
     if (this.dropSpecialCharacters) {
       inputValue = inputValue.replace(/[^a-zA-Z0-9]/g, ''); // Remove caracteres especiais
-      this.valueChange.emit(inputValue);
+      this.valueChange.emit(inputValue); // Emite o valor limpo
     }
 
-    if (event.inputType === 'deleteContentBackward' || event.inputType === 'deleteContentForward') {
-      let newValue = inputElement.value;
-      let newCursorPosition = cursorPosition;
-
-      if (cursorPosition > 0) {
-        const prevChar = prevValue[cursorPosition - 1]; // Caracter antes do cursor
-        const nextChar = prevValue[cursorPosition]; // Caracter após o cursor
-
-        // Se estiver deletando e o caractere anterior for especial, apaga ele também
-        if (!/[a-zA-Z0-9]/.test(prevChar)) {
-          newValue = prevValue.substring(0, cursorPosition - 1) + prevValue.substring(cursorPosition);
-          newCursorPosition--;
+    if (
+      event.inputType == 'deleteContentBackward' || event.inputType == 'deleteContentForward'
+    ) {
+      setTimeout(() => {
+        const value = this.el.nativeElement.value.trim(); // Elimina espaços vazios ao apagar conteúdo
+        const lastChar = value.charAt(value.length - 1);
+        if (!/[a-zA-Z0-9]/.test(lastChar)) {
+          const updatedValue = value.substring(0, value.length - 1); // Remove o último caractere
+          this.el.nativeElement.value = updatedValue;
         }
-
-        // Se após apagar o caractere ainda sobrar um especial na posição, remove
-        if (nextChar && !/[a-zA-Z0-9]/.test(nextChar)) {
-          newValue = newValue.substring(0, newCursorPosition) + newValue.substring(newCursorPosition + 1);
-        }
-
-        inputElement.value = newValue;
-        inputElement.setSelectionRange(newCursorPosition, newCursorPosition);
-      }
+      }, 1);
     }
+
   }
-
 
   // Seleciona a máscara com base no tamanho do valor
   private selectMask(masks: string[], valueLength: number): string | null {
