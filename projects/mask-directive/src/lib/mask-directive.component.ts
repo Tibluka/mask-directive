@@ -76,6 +76,7 @@ export class MaskDirective {
     if (
       event.inputType == 'deleteContentBackward' || event.inputType == 'deleteContentForward'
     ) {
+      debugger
       const value = this.el.nativeElement.value.trim(); // Elimina espaços vazios ao apagar conteúdo
       const lastChar = value.charAt(value.length - 1);
       if (!/[a-zA-Z0-9]/.test(lastChar)) {

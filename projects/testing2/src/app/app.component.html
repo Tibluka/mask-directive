@@ -1,6 +1,5 @@
 <form [formGroup]="form">
-    <input libMask="(00) 0000-0000||(00) 00000-0000" formControlName="to" [dropSpecialCharacters]="true"
-        (valueChange)="form.get('to')!.setValue($event)" />
+    <input libMask="(00) 0000-0000||(00) 00000-0000" formControlName="to"/>
 </form>
 
 <h1>Teletone do cliente: {{ form.get('to')!.value | libPipe: '(00) 0000-0000||(00) 00000-0000' }}</h1>
