@@ -1,6 +1,6 @@
 {
   "name": "mask-directive",
-  "version": "0.2.23",
+  "version": "0.2.25",
   "scripts": {
     "ng": "ng",
     "start": "ng serve testing2",
@@ -39,7 +39,7 @@
     "typescript": "~4.5.2"
   },
   "peerDependencies": {
-    "@angular/common": "^18.2.0",
-    "@angular/core": "^18.2.0"
+    "@angular/common": "^13.1.0",
+    "@angular/core": "^13.1.0"
   }
 }
