@@ -10,7 +10,7 @@ import { FormControl, FormGroup } from '@angular/forms';
 export class AppComponent {
 
   form = new FormGroup({
-    to: new FormControl('')
+    to: new FormControl(('') as any)
   })
 
   title = 'testing2';

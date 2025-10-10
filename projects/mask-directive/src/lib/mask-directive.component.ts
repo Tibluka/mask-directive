@@ -2,7 +2,8 @@ import { Directive, ElementRef, EventEmitter, HostListener, Input, Output, OnIni
 import { NgControl, NgModel } from '@angular/forms';
 
 @Directive({
-  selector: '[libMask]'
+  selector: '[libMask]',
+  standalone: false
 })
 export class MaskDirective implements OnInit {
   @Input('libMask') mask: string = '';
@@ -101,6 +102,17 @@ export class MaskDirective implements OnInit {
     if (this.dropSpecialCharacters) {
       const cleanedInputValue = inputValue.replace(/[^a-zA-Z0-9]/g, '');
       this.valueChange.emit(cleanedInputValue); // Emite o valor limpo
+
+      // Atualiza o FormControl/NgModel com o valor limpo
+      if (this.ngControl?.control) {
+        this.ngControl.control.setValue(cleanedInputValue, { emitEvent: false });
+      }
+      if (this.ngModel) {
+        this.ngModel.update.emit(cleanedInputValue);
+      }
+    } else {
+      // Se dropSpecialCharacters for false, emite o valor formatado
+      this.valueChange.emit(inputElement.value);
     }
 
     // Tratamento de delete com timeout
