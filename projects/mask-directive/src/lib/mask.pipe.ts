@@ -13,9 +13,22 @@ export class MaskPipe implements PipeTransform {
       '*': /[a-zA-Z0-9]/,
     };
 
+  // Configurações de máscaras de moeda
+  private currencyMasks: { [key: string]: { symbol: string, decimal: string, thousand: string, prefix: string } } = {
+    'BRL': { symbol: 'R$', decimal: ',', thousand: '.', prefix: 'R$ ' },
+    'USD': { symbol: '$', decimal: '.', thousand: ',', prefix: '$ ' },
+    'EUR': { symbol: '€', decimal: ',', thousand: '.', prefix: '€ ' },
+    'GBP': { symbol: '£', decimal: '.', thousand: ',', prefix: '£ ' },
+  };
+
   transform(value: string, masks: string): string {
     if (!value || !masks) {
       return value || '';
+    }
+
+    // 💰 Verifica se é máscara de moeda
+    if (this.isCurrencyMask(masks)) {
+      return this.applyCurrencyMask(value, masks);
     }
 
     const inputValue = value.replace(/[^a-zA-Z0-9]/g, '');
@@ -54,5 +67,52 @@ export class MaskPipe implements PipeTransform {
     }
 
     return formattedValue;
+  }
+
+  // 💰 MÉTODOS DE MÁSCARA DE MOEDA
+
+  /**
+   * Verifica se a máscara é do tipo moeda
+   */
+  private isCurrencyMask(mask: string): boolean {
+    return this.currencyMasks.hasOwnProperty(mask.toUpperCase());
+  }
+
+  /**
+   * Aplica formatação de moeda ao valor
+   */
+  private applyCurrencyMask(value: string, currencyType: string): string {
+    const config = this.currencyMasks[currencyType.toUpperCase()];
+
+    if (!config) return value;
+
+    // Remove tudo exceto números
+    const numbersOnly = value.replace(/\D/g, '');
+
+    if (!numbersOnly) return '';
+
+    // Separa parte inteira e decimal (últimos 2 dígitos são centavos)
+    let integerPart: string;
+    let decimalPart: string;
+
+    if (numbersOnly.length === 1) {
+      // Ex: "5" -> "0.05"
+      integerPart = '0';
+      decimalPart = '0' + numbersOnly;
+    } else if (numbersOnly.length === 2) {
+      // Ex: "50" -> "0.50"
+      integerPart = '0';
+      decimalPart = numbersOnly;
+    } else {
+      // Ex: "150" -> "1.50"
+      integerPart = numbersOnly.slice(0, -2);
+      decimalPart = numbersOnly.slice(-2);
+    }
+
+    // Adiciona separador de milhares na parte inteira
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, config.thousand);
+
+    // Retorna o valor formatado com símbolo da moeda
+    return `${config.prefix}${formattedInteger}${config.decimal}${decimalPart}`;
   }
 }

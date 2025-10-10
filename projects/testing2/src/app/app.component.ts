@@ -16,6 +16,11 @@ export class AppComponent {
   title = 'testing2';
   cpf: string = '';
 
+  // Propriedades para máscaras de moeda
+  valorBRL: string = '';
+  valorUSD: string = '';
+  valorEUR: string = '';
+
 
   click() {
     console.log(this.form.value.to);

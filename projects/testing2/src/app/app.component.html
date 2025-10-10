@@ -1,5 +1,5 @@
 <form [formGroup]="form">
-    <input libMask="(00) 0000-0000||(00) 00000-0000" formControlName="to" [dropSpecialCharacters]="true" />
+    <input libMask="(00) 0000-0000||(00) 00000-0000" formControlName="to" [dropSpecialCharacters]="false" />
 </form>
 <h1>{{ form.get('to')!.value }}</h1>
 
@@ -9,6 +9,30 @@
 
 <div>
     <input libMask="000.000.000-00" [dropSpecialCharacters]="false" [(ngModel)]="cpf" />
-
     <h1>NgModel: {{ cpf }}</h1>
+</div>
+
+<hr>
+
+<h2>💰 Máscaras de Moeda</h2>
+
+<div>
+    <h3>Real Brasileiro (BRL)</h3>
+    <input libMask="BRL" [dropSpecialCharacters]="false" [(ngModel)]="valorBRL" />
+    <p>Valor armazenado: {{ valorBRL }}</p>
+    <p>Valor formatado: {{ valorBRL | libPipe: 'BRL' }}</p>
+</div>
+
+<div>
+    <h3>Dólar Americano (USD)</h3>
+    <input libMask="USD" [dropSpecialCharacters]="true" [(ngModel)]="valorUSD" />
+    <p>Valor armazenado: {{ valorUSD }}</p>
+    <p>Valor formatado: {{ valorUSD | libPipe: 'USD' }}</p>
+</div>
+
+<div>
+    <h3>Euro (EUR)</h3>
+    <input libMask="EUR" [dropSpecialCharacters]="false" [(ngModel)]="valorEUR" />
+    <p>Valor armazenado: {{ valorEUR }}</p>
+    <p>Valor formatado: {{ valorEUR | libPipe: 'EUR' }}</p>
 </div>

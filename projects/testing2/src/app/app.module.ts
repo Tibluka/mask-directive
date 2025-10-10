@@ -2,8 +2,8 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { FormsModule, NgModel, ReactiveFormsModule } from '@angular/forms';
-import { MaskDirectiveModule } from 'mask-directive';
 import { AppComponent } from './app.component';
+import { MaskDirectiveModule } from 'projects/mask-directive/src/public-api';
 
 @NgModule({
   declarations: [
