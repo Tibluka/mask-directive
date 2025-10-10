@@ -289,8 +289,10 @@ export class MaskDirective implements OnInit {
 
     // Move o cursor para o final
     setTimeout(() => {
-      const len = inputElement.value.length;
-      inputElement.setSelectionRange(len, len);
+      if (typeof inputElement.setSelectionRange === 'function') {
+        const len = inputElement.value.length;
+        inputElement.setSelectionRange(len, len);
+      }
     }, 0);
   }
 
@@ -363,7 +365,7 @@ export class MaskDirective implements OnInit {
     if (this.isCurrencyMask()) {
       setTimeout(() => {
         const inputElement = this.el?.nativeElement;
-        if (inputElement) {
+        if (inputElement && typeof inputElement.select === 'function') {
           inputElement.select();
         }
       }, 0);
