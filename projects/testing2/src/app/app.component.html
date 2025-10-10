@@ -1,5 +1,5 @@
 <form [formGroup]="form">
-    <input libMask="(00) 0000-0000||(00) 00000-0000" formControlName="to" [dropSpecialCharacters]="false" />
+    <input libMask="(00) 0000-0000||(00) 00000-0000" formControlName="to" [dropSpecialCharacters]="true" />
 </form>
 <h1>{{ form.get('to')!.value }}</h1>
 

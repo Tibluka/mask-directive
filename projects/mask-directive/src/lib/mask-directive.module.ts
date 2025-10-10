@@ -5,7 +5,7 @@ import { FormsModule, NgModel } from '@angular/forms';
 
 
 @NgModule({
-  declarations: [
+  imports: [
     MaskDirective,
     MaskPipe
   ],

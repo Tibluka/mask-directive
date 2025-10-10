@@ -3,7 +3,7 @@ import { NgControl, NgModel } from '@angular/forms';
 
 @Directive({
   selector: '[libMask]',
-  standalone: false
+  standalone: true
 })
 export class MaskDirective implements OnInit {
   @Input('libMask') mask: string = '';

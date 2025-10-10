@@ -2,7 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
   name: 'libPipe',
-  standalone: false
+  standalone: true
 })
 export class MaskPipe implements PipeTransform {
   private regexMap: {
