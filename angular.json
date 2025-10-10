@@ -101,12 +101,15 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "buildTarget": "testing2:build"
+          },
           "configurations": {
             "production": {
-              "browserTarget": "testing2:build:production"
+              "buildTarget": "testing2:build:production"
             },
             "development": {
-              "browserTarget": "testing2:build:development"
+              "buildTarget": "testing2:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -137,6 +140,5 @@
         }
       }
     }
-  },
-  "defaultProject": "mask-directive"
+  }
 }
