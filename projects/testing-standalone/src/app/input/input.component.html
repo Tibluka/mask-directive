@@ -1,0 +1,36 @@
+<div class="form-group" [ngStyle]="{
+    'width': fullWidth ? '100%' : width
+}">
+
+    @if (label) {
+    <label [for]="uniqueId" [class]="labelClasses">
+        {{ label }}
+    </label>
+    }
+
+
+    <div class="input-container" [class.has-icon]="icon">
+
+
+        <input [libMask]="libMask" [dropSpecialCharacters]="false" [id]="uniqueId" [class]="inputClasses"
+            [type]="effectiveType" [placeholder]="placeholder" [required]="required" [disabled]="disabled"
+            [readonly]="readonly" [attr.maxlength]="maxlength" [attr.minlength]="minlength"
+            [attr.step]="type === 'number' ? '0.01' : null" [attr.min]="type === 'number' ? '0' : null"
+            [autocomplete]="autocomplete" [ngModel]="value" (ngModelChange)="onInputChange($event)"
+            (focus)="onInputFocus()" (blur)="onInputBlur()" />
+    </div>
+
+
+    @if (showError) {
+    <div class="error-message">
+        {{ errorMessage }}
+    </div>
+    }
+
+
+    @if (showHelper) {
+    <div class="helper-text">
+        {{ helperText }}
+    </div>
+    }
+</div>

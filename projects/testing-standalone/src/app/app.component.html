@@ -1,0 +1,18 @@
+<div style="padding: 20px; font-family: Arial, sans-serif;">
+  <h1>🧪 Teste libMask - Angular 20 Standalone</h1>
+
+  <!-- TESTE 1: Validação Automática -->
+  <div style="border: 2px solid #007bff; padding: 20px; margin: 20px 0; border-radius: 8px;">
+    <h2>🎯 Teste 1: Validação Automática</h2>
+    <p><strong>Deve funcionar automaticamente sem adicionar validator manual</strong></p>
+
+    <form [formGroup]="form">
+
+      <ds-input label="CPF" [fullWidth]="true" formControlName="cpfCnpj" placeholder="000.000.000-00"
+        libMask="000.000.000-00" [required]="true" [invalid]="form.get('cpfCnpj')!.invalid">
+      </ds-input>
+    </form>
+
+    <p><strong>Form Manual Válido: {{ form.valid }}</strong></p>
+  </div>
+</div>

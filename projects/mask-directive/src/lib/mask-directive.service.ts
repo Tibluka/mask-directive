@@ -72,4 +72,12 @@ export class MaskDirectiveService {
     return true;
   }
 
+  /**
+   * Cria um validator que funciona com qualquer máscara
+   * Use este método quando a validação automática não funcionar
+   */
+  static createMaskValidator(maskPattern: string): ValidatorFn {
+    return this.maskPatternValidator(maskPattern);
+  }
+
 }

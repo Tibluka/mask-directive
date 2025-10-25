@@ -103,6 +103,9 @@ export class MaskDirective implements OnInit {
       return;
     }
 
+    // 🎯 Tenta adicionar validator se ainda não foi adicionado
+    this.tryAddValidator();
+
     const inputElement = this.el?.nativeElement;
     if (!inputElement) return;
 
@@ -380,23 +383,66 @@ export class MaskDirective implements OnInit {
    * 🎯 Adiciona validator automaticamente baseado na máscara
    */
   private addAutomaticValidator(): void {
-    if (!this.ngControl?.control) return;
+    // Tenta com NgControl primeiro
+    if (this.ngControl?.control) {
+      this.addValidatorToControl(this.ngControl.control);
+      return;
+    }
+
+    // Se não tem NgControl, tenta com NgModel
+    if (this.ngModel?.control) {
+      this.addValidatorToControl(this.ngModel.control);
+      return;
+    }
+
+    // Se não tem nenhum dos dois, aguarda um pouco e tenta novamente
+    setTimeout(() => {
+      if (this.ngControl?.control) {
+        this.addValidatorToControl(this.ngControl.control);
+      } else if (this.ngModel?.control) {
+        this.addValidatorToControl(this.ngModel.control);
+      }
+    }, 100);
+  }
+
+  /**
+   * Adiciona validator a um control específico
+   */
+  private addValidatorToControl(control: any): void {
+    if (!control) return;
 
     // Verifica se já tem validator de máscara para evitar duplicação
-    const existingValidators = this.ngControl.control.validator;
+    const existingValidators = control.validator;
     if (existingValidators) {
-      const errors = existingValidators(this.ngControl.control);
+      const errors = existingValidators(control);
       if (errors && errors['maskPatternInvalid']) {
         return; // Já tem validator de máscara
       }
     }
 
     // Adiciona o validator baseado na máscara
-    const currentValidators = this.ngControl.control.validator ? [this.ngControl.control.validator] : [];
+    const currentValidators = control.validator ? [control.validator] : [];
     const maskValidator = MaskDirectiveService.maskPatternValidator(this.mask);
 
     // Aplica os validators
-    this.ngControl.control.setValidators([...currentValidators, maskValidator]);
-    this.ngControl.control.updateValueAndValidity();
+    control.setValidators([...currentValidators, maskValidator]);
+    control.updateValueAndValidity();
+  }
+
+  /**
+   * Tenta adicionar validator quando o control estiver disponível
+   */
+  private tryAddValidator(): void {
+    // Tenta com NgControl primeiro
+    if (this.ngControl?.control) {
+      this.addValidatorToControl(this.ngControl.control);
+      return;
+    }
+
+    // Se não tem NgControl, tenta com NgModel
+    if (this.ngModel?.control) {
+      this.addValidatorToControl(this.ngModel.control);
+      return;
+    }
   }
 }
