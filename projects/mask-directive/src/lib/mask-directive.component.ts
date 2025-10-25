@@ -147,6 +147,14 @@ export class MaskDirective implements OnInit {
     } else {
       // Se dropSpecialCharacters for false, emite o valor formatado
       this.valueChange.emit(inputElement.value);
+
+      // Atualiza o FormControl/NgModel com o valor formatado
+      if (this.ngControl?.control) {
+        this.ngControl.control.setValue(inputElement.value, { emitEvent: false });
+      }
+      if (this.ngModel) {
+        this.ngModel.update.emit(inputElement.value);
+      }
     }
 
     // Tratamento de delete com timeout
@@ -160,6 +168,32 @@ export class MaskDirective implements OnInit {
           if (!/[a-zA-Z0-9]/.test(lastChar)) {
             const updatedValue = value.substring(0, value.length - 1);
             inputElement.value = updatedValue;
+
+            // Atualiza o FormControl/NgModel com o valor corrigido
+            if (this.dropSpecialCharacters) {
+              const cleanedValue = updatedValue.replace(/[^a-zA-Z0-9]/g, '');
+              if (this.ngControl?.control) {
+                this.ngControl.control.setValue(cleanedValue, { emitEvent: false });
+              }
+              if (this.ngModel) {
+                this.ngModel.update.emit(cleanedValue);
+              }
+            } else {
+              if (this.ngControl?.control) {
+                this.ngControl.control.setValue(updatedValue, { emitEvent: false });
+              }
+              if (this.ngModel) {
+                this.ngModel.update.emit(updatedValue);
+              }
+            }
+          }
+        } else {
+          // Se o campo está vazio, limpa o FormControl/NgModel
+          if (this.ngControl?.control) {
+            this.ngControl.control.setValue('', { emitEvent: false });
+          }
+          if (this.ngModel) {
+            this.ngModel.update.emit('');
           }
         }
       }, 1);
@@ -437,7 +471,7 @@ export class MaskDirective implements OnInit {
     const currentValidators = control.validator ? [control.validator] : [];
     const maskValidator = MaskDirectiveService.maskPatternValidator(this.mask);
 
-    // Aplica os validators
+    // Aplica os validators mantendo os existentes
     control.setValidators([...currentValidators, maskValidator]);
     control.updateValueAndValidity();
   }

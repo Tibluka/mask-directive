@@ -13,7 +13,8 @@ export class MaskDirectiveService {
    */
   static maskPatternValidator(maskPattern: string): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      if (!control.value) return null;
+      // Se não tem valor ou está vazio, não valida (deixa outros validators como required fazerem seu trabalho)
+      if (!control.value || control.value === '') return null;
 
       const value = control.value.toString();
 
