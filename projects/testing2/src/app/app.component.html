@@ -2,6 +2,7 @@
     <input libMask="(00) 0000-0000||(00) 00000-0000" formControlName="to" [dropSpecialCharacters]="false" />
 </form>
 <h1>{{ form.get('to')!.value }}</h1>
+Valid: {{ form.get('to')!.valid }}
 
 <h1>Teletone do cliente: {{ (form.get('to')!.value || '') | libPipe: '(00) 0000-0000||(00) 00000-0000' }}</h1>
 

@@ -1,5 +1,6 @@
 import { Directive, ElementRef, EventEmitter, HostListener, Input, Output, OnInit } from '@angular/core';
-import { NgControl, NgModel } from '@angular/forms';
+import { NgControl, NgModel, Validators } from '@angular/forms';
+import { MaskDirectiveService } from './mask-directive.service';
 
 @Directive({
   selector: '[libMask]',
@@ -37,6 +38,9 @@ export class MaskDirective implements OnInit {
     if (!this.mask || this.isNumericField()) {
       return;
     }
+
+    // 🎯 ADICIONA VALIDATOR AUTOMATICAMENTE
+    this.addAutomaticValidator();
 
     // 💰 Se for máscara de moeda, aplicar valor inicial e sair
     if (this.isCurrencyMask()) {
@@ -370,5 +374,29 @@ export class MaskDirective implements OnInit {
         }
       }, 0);
     }
+  }
+
+  /**
+   * 🎯 Adiciona validator automaticamente baseado na máscara
+   */
+  private addAutomaticValidator(): void {
+    if (!this.ngControl?.control) return;
+
+    // Verifica se já tem validator de máscara para evitar duplicação
+    const existingValidators = this.ngControl.control.validator;
+    if (existingValidators) {
+      const errors = existingValidators(this.ngControl.control);
+      if (errors && errors['maskPatternInvalid']) {
+        return; // Já tem validator de máscara
+      }
+    }
+
+    // Adiciona o validator baseado na máscara
+    const currentValidators = this.ngControl.control.validator ? [this.ngControl.control.validator] : [];
+    const maskValidator = MaskDirectiveService.maskPatternValidator(this.mask);
+
+    // Aplica os validators
+    this.ngControl.control.setValidators([...currentValidators, maskValidator]);
+    this.ngControl.control.updateValueAndValidity();
   }
 }
