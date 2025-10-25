@@ -34,16 +34,12 @@ export class MaskDirective implements OnInit {
     private ngControl: NgControl) { }
 
   ngOnInit() {
-    console.log('🎯 MaskDirective ngOnInit - Mask:', this.mask);
-
     // 🔧 PROTEÇÃO: Só executar se máscara estiver definida e não for campo numérico
     if (!this.mask || this.isNumericField()) {
-      console.log('❌ MaskDirective - Máscara não definida ou campo numérico');
       return;
     }
 
     // 🎯 ADICIONA VALIDATOR AUTOMATICAMENTE
-    console.log('🎯 MaskDirective - Tentando adicionar validator automático');
     this.addAutomaticValidator();
 
     // 💰 Se for máscara de moeda, aplicar valor inicial e sair
@@ -387,35 +383,24 @@ export class MaskDirective implements OnInit {
    * 🎯 Adiciona validator automaticamente baseado na máscara
    */
   private addAutomaticValidator(): void {
-    console.log('🔍 addAutomaticValidator - NgControl:', !!this.ngControl?.control);
-    console.log('🔍 addAutomaticValidator - NgModel:', !!this.ngModel?.control);
-
     // Tenta com NgControl primeiro
     if (this.ngControl?.control) {
-      console.log('✅ NgControl encontrado, adicionando validator');
       this.addValidatorToControl(this.ngControl.control);
       return;
     }
 
     // Se não tem NgControl, tenta com NgModel
     if (this.ngModel?.control) {
-      console.log('✅ NgModel encontrado, adicionando validator');
       this.addValidatorToControl(this.ngModel.control);
       return;
     }
 
-    console.log('⏳ Nenhum control encontrado, aguardando 100ms...');
     // Se não tem nenhum dos dois, aguarda um pouco e tenta novamente
     setTimeout(() => {
-      console.log('🔄 Tentando novamente após timeout...');
       if (this.ngControl?.control) {
-        console.log('✅ NgControl encontrado no timeout, adicionando validator');
         this.addValidatorToControl(this.ngControl.control);
       } else if (this.ngModel?.control) {
-        console.log('✅ NgModel encontrado no timeout, adicionando validator');
         this.addValidatorToControl(this.ngModel.control);
-      } else {
-        console.log('❌ Nenhum control encontrado após timeout');
       }
     }, 100);
   }
@@ -424,89 +409,53 @@ export class MaskDirective implements OnInit {
    * Adiciona validator a um control específico
    */
   private addValidatorToControl(control: any): void {
-    console.log('🔧 addValidatorToControl - Control:', control);
-
     if (!control) {
-      console.log('❌ Control não encontrado');
       return;
     }
 
     // Verifica se já tem validator de máscara para evitar duplicação
     const existingValidators = control.validator;
-    console.log('🔍 Validators existentes:', existingValidators);
 
     // Verifica se já tem validator de máscara testando com um valor vazio
     if (existingValidators) {
       const testControl = { value: '', touched: true, dirty: true };
       const errors = existingValidators(testControl);
-      console.log('🔍 Erros do validator existente (teste):', errors);
 
       // Só pula se realmente tem o validator de máscara E está funcionando
       if (errors && errors['maskPatternInvalid']) {
-        console.log('⚠️ Já tem validator de máscara, mas vamos verificar se está funcionando...');
-
         // Testa com um valor inválido para ver se o validator está funcionando
         const testInvalidControl = { value: '123', touched: true, dirty: true };
         const invalidErrors = existingValidators(testInvalidControl);
-        console.log('🔍 Teste com valor inválido:', invalidErrors);
 
         if (invalidErrors && invalidErrors['maskPatternInvalid']) {
-          console.log('✅ Validator de máscara está funcionando, pulando...');
           return; // Já tem validator de máscara funcionando
-        } else {
-          console.log('❌ Validator de máscara não está funcionando, reaplicando...');
         }
       }
     }
 
-    console.log('✅ Adicionando validator de máscara:', this.mask);
     // Adiciona o validator baseado na máscara
     const currentValidators = control.validator ? [control.validator] : [];
     const maskValidator = MaskDirectiveService.maskPatternValidator(this.mask);
 
-    console.log('🔧 Validators atuais:', currentValidators.length);
-    console.log('🔧 Novo validator de máscara:', maskValidator);
-
     // Aplica os validators
     control.setValidators([...currentValidators, maskValidator]);
     control.updateValueAndValidity();
-
-    console.log('✅ Validator adicionado com sucesso!');
-
-    // Testa o validator imediatamente após adicionar
-    setTimeout(() => {
-      console.log('🧪 Testando validator após adição...');
-      const testValue = '123';
-      const testErrors = control.validator?.({ value: testValue, touched: true, dirty: true });
-      console.log('🧪 Teste com valor "123":', testErrors);
-
-      const testValue2 = '123.456.789-00';
-      const testErrors2 = control.validator?.({ value: testValue2, touched: true, dirty: true });
-      console.log('🧪 Teste com valor "123.456.789-00":', testErrors2);
-    }, 100);
   }
 
   /**
    * Tenta adicionar validator quando o control estiver disponível
    */
   private tryAddValidator(): void {
-    console.log('🔄 tryAddValidator - NgControl:', !!this.ngControl?.control);
-    console.log('🔄 tryAddValidator - NgModel:', !!this.ngModel?.control);
-
     // Tenta com NgControl primeiro
     if (this.ngControl?.control) {
-      console.log('✅ tryAddValidator - NgControl encontrado');
       this.addValidatorToControl(this.ngControl.control);
       return;
     }
 
     // Se não tem NgControl, tenta com NgModel
     if (this.ngModel?.control) {
-      console.log('✅ tryAddValidator - NgModel encontrado');
       this.addValidatorToControl(this.ngModel.control);
       return;
     }
-
-    console.log('❌ tryAddValidator - Nenhum control encontrado');
   }
 }

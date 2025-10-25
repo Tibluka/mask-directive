@@ -27,32 +27,15 @@ export class AppComponent {
   });
 
   constructor() {
-    // Log quando o form é criado
-    console.log('📝 AppComponent - Form criado:', this.form);
-
     // Monitora mudanças no form
     this.form.valueChanges.subscribe(value => {
-      console.log('📝 AppComponent - Form value changed:', value);
-      console.log('📝 AppComponent - Form valid:', this.form.valid);
-      console.log('📝 AppComponent - CPF valid:', this.form.get('cpfCnpj')?.valid);
-      console.log('📝 AppComponent - CPF errors:', this.form.get('cpfCnpj')?.errors);
+      // Form value changed
     });
   }
 
   testValidation() {
-    console.log('🧪 === TESTE DE VALIDAÇÃO ===');
-    console.log('📝 Form válido:', this.form.valid);
-    console.log('📝 CPF valor:', this.form.get('cpfCnpj')?.value);
-    console.log('📝 CPF válido:', this.form.get('cpfCnpj')?.valid);
-    console.log('📝 CPF errors:', this.form.get('cpfCnpj')?.errors);
-    console.log('📝 CPF touched:', this.form.get('cpfCnpj')?.touched);
-    console.log('📝 CPF dirty:', this.form.get('cpfCnpj')?.dirty);
-
     // Força validação
     this.form.get('cpfCnpj')?.markAsTouched();
     this.form.get('cpfCnpj')?.updateValueAndValidity();
-
-    console.log('📝 Após markAsTouched - CPF válido:', this.form.get('cpfCnpj')?.valid);
-    console.log('📝 Após markAsTouched - CPF errors:', this.form.get('cpfCnpj')?.errors);
   }
 }
