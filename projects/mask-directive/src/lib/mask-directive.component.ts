@@ -435,12 +435,27 @@ export class MaskDirective implements OnInit {
     const existingValidators = control.validator;
     console.log('🔍 Validators existentes:', existingValidators);
 
+    // Verifica se já tem validator de máscara testando com um valor vazio
     if (existingValidators) {
-      const errors = existingValidators(control);
-      console.log('🔍 Erros do validator existente:', errors);
+      const testControl = { value: '', touched: true, dirty: true };
+      const errors = existingValidators(testControl);
+      console.log('🔍 Erros do validator existente (teste):', errors);
+
+      // Só pula se realmente tem o validator de máscara E está funcionando
       if (errors && errors['maskPatternInvalid']) {
-        console.log('⚠️ Já tem validator de máscara, pulando...');
-        return; // Já tem validator de máscara
+        console.log('⚠️ Já tem validator de máscara, mas vamos verificar se está funcionando...');
+
+        // Testa com um valor inválido para ver se o validator está funcionando
+        const testInvalidControl = { value: '123', touched: true, dirty: true };
+        const invalidErrors = existingValidators(testInvalidControl);
+        console.log('🔍 Teste com valor inválido:', invalidErrors);
+
+        if (invalidErrors && invalidErrors['maskPatternInvalid']) {
+          console.log('✅ Validator de máscara está funcionando, pulando...');
+          return; // Já tem validator de máscara funcionando
+        } else {
+          console.log('❌ Validator de máscara não está funcionando, reaplicando...');
+        }
       }
     }
 
@@ -457,6 +472,18 @@ export class MaskDirective implements OnInit {
     control.updateValueAndValidity();
 
     console.log('✅ Validator adicionado com sucesso!');
+
+    // Testa o validator imediatamente após adicionar
+    setTimeout(() => {
+      console.log('🧪 Testando validator após adição...');
+      const testValue = '123';
+      const testErrors = control.validator?.({ value: testValue, touched: true, dirty: true });
+      console.log('🧪 Teste com valor "123":', testErrors);
+
+      const testValue2 = '123.456.789-00';
+      const testErrors2 = control.validator?.({ value: testValue2, touched: true, dirty: true });
+      console.log('🧪 Teste com valor "123.456.789-00":', testErrors2);
+    }, 100);
   }
 
   /**
