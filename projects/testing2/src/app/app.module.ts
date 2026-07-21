@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
-import { FormsModule, NgModel, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AppComponent } from './app.component';
 import { MaskDirectiveModule } from 'projects/mask-directive/src/public-api';
 
@@ -15,7 +15,6 @@ import { MaskDirectiveModule } from 'projects/mask-directive/src/public-api';
     ReactiveFormsModule,
     FormsModule
   ],
-  providers: [NgModel],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

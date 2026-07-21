@@ -1,12 +1,66 @@
 import { Injectable } from '@angular/core';
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
+export interface CurrencyMaskConfig {
+  symbol: string;
+  prefix: string;
+  decimal: string;
+  thousand: string;
+  decimalDigits: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class MaskDirectiveService {
 
   constructor() { }
+
+  /**
+   * Verifica se um código corresponde a uma moeda ISO 4217 suportada pelo
+   * ambiente (via Intl.NumberFormat), sem depender de uma lista fixa de moedas.
+   */
+  static isValidCurrencyCode(code: string): boolean {
+    if (!code || !/^[A-Za-z]{3}$/.test(code)) return false;
+
+    try {
+      new Intl.NumberFormat(undefined, { style: 'currency', currency: code.toUpperCase() });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Deriva a configuração de formatação (símbolo, separadores e quantidade de
+   * decimais) de qualquer moeda ISO 4217 usando Intl.NumberFormat, em vez de
+   * uma lista fixa de moedas.
+   */
+  static getCurrencyConfig(code: string, locale: string = 'pt-BR'): CurrencyMaskConfig | null {
+    if (!this.isValidCurrencyCode(code)) return null;
+
+    const currencyCode = code.toUpperCase();
+
+    try {
+      const formatter = new Intl.NumberFormat(locale, { style: 'currency', currency: currencyCode });
+      const parts = formatter.formatToParts(1234.56);
+
+      const symbol = parts.find(part => part.type === 'currency')?.value ?? currencyCode;
+      const decimal = parts.find(part => part.type === 'decimal')?.value ?? ',';
+      const thousand = parts.find(part => part.type === 'group')?.value ?? '.';
+      const decimalDigits = formatter.resolvedOptions().maximumFractionDigits ?? 2;
+
+      return {
+        symbol,
+        prefix: `${symbol} `,
+        decimal,
+        thousand,
+        decimalDigits,
+      };
+    } catch {
+      return null;
+    }
+  }
 
   /**
    * Cria um validator que valida contra padrões específicos de máscara

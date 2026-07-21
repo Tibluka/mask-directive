@@ -1,6 +1,6 @@
-import { Directive, ElementRef, EventEmitter, HostListener, Input, Output, OnInit } from '@angular/core';
-import { NgControl, NgModel, Validators } from '@angular/forms';
-import { MaskDirectiveService } from './mask-directive.service';
+import { Directive, ElementRef, EventEmitter, HostListener, Input, Optional, Output, OnInit } from '@angular/core';
+import { NgControl, NgModel } from '@angular/forms';
+import { CurrencyMaskConfig, MaskDirectiveService } from './mask-directive.service';
 
 @Directive({
   selector: '[libMask]',
@@ -9,6 +9,8 @@ import { MaskDirectiveService } from './mask-directive.service';
 export class MaskDirective implements OnInit {
   @Input('libMask') mask: string = '';
   @Input() dropSpecialCharacters: boolean = true;
+  // Locale usado para derivar símbolo e separadores da moeda via Intl.NumberFormat
+  @Input() currencyLocale: string = 'pt-BR';
   @Output() valueChange: EventEmitter<string> = new EventEmitter<string>();
 
   private regexMap: { [key: string]: RegExp } = {
@@ -17,21 +19,19 @@ export class MaskDirective implements OnInit {
     '*': /[a-zA-Z0-9]/, // Letras e números
   };
 
-  // Configurações de máscaras de moeda
-  private currencyMasks: { [key: string]: { symbol: string, decimal: string, thousand: string, prefix: string } } = {
-    'BRL': { symbol: 'R$', decimal: ',', thousand: '.', prefix: 'R$ ' },
-    'USD': { symbol: '$', decimal: '.', thousand: ',', prefix: '$ ' },
-    'EUR': { symbol: '€', decimal: ',', thousand: '.', prefix: '€ ' },
-    'GBP': { symbol: '£', decimal: '.', thousand: ',', prefix: '£ ' },
-  };
-
-  // Controle interno para valores de moeda (armazena em centavos)
+  // Controle interno para valores de moeda (armazena no menor fracionamento da moeda, ex: centavos)
   private currencyValue: number = 0;
+
+  // Cache da configuração de moeda (símbolo, separadores, decimais), calculada via Intl.NumberFormat
+  private currencyConfig: CurrencyMaskConfig | null | undefined = undefined;
+
+  // Garante que o validator de máscara seja adicionado apenas uma vez
+  private validatorApplied: boolean = false;
 
   constructor(
     private el: ElementRef<HTMLInputElement>,
-    private ngModel: NgModel,
-    private ngControl: NgControl) { }
+    @Optional() private ngModel: NgModel | null,
+    @Optional() private ngControl: NgControl | null) { }
 
   ngOnInit() {
     // 🔧 PROTEÇÃO: Só executar se máscara estiver definida e não for campo numérico
@@ -139,10 +139,10 @@ export class MaskDirective implements OnInit {
 
       // Atualiza o FormControl/NgModel com o valor limpo
       if (this.ngControl?.control) {
-        this.ngControl.control.setValue(cleanedInputValue, { emitEvent: false });
+        this.ngControl.control.setValue(cleanedInputValue, { emitEvent: false, emitModelToViewChange: false });
       }
       if (this.ngModel) {
-        this.ngModel.update.emit(cleanedInputValue);
+        this.ngModel.viewToModelUpdate(cleanedInputValue);
       }
     } else {
       // Se dropSpecialCharacters for false, emite o valor formatado
@@ -150,10 +150,10 @@ export class MaskDirective implements OnInit {
 
       // Atualiza o FormControl/NgModel com o valor formatado
       if (this.ngControl?.control) {
-        this.ngControl.control.setValue(inputElement.value, { emitEvent: false });
+        this.ngControl.control.setValue(inputElement.value, { emitEvent: false, emitModelToViewChange: false });
       }
       if (this.ngModel) {
-        this.ngModel.update.emit(inputElement.value);
+        this.ngModel.viewToModelUpdate(inputElement.value);
       }
     }
 
@@ -173,27 +173,27 @@ export class MaskDirective implements OnInit {
             if (this.dropSpecialCharacters) {
               const cleanedValue = updatedValue.replace(/[^a-zA-Z0-9]/g, '');
               if (this.ngControl?.control) {
-                this.ngControl.control.setValue(cleanedValue, { emitEvent: false });
+                this.ngControl.control.setValue(cleanedValue, { emitEvent: false, emitModelToViewChange: false });
               }
               if (this.ngModel) {
-                this.ngModel.update.emit(cleanedValue);
+                this.ngModel.viewToModelUpdate(cleanedValue);
               }
             } else {
               if (this.ngControl?.control) {
-                this.ngControl.control.setValue(updatedValue, { emitEvent: false });
+                this.ngControl.control.setValue(updatedValue, { emitEvent: false, emitModelToViewChange: false });
               }
               if (this.ngModel) {
-                this.ngModel.update.emit(updatedValue);
+                this.ngModel.viewToModelUpdate(updatedValue);
               }
             }
           }
         } else {
           // Se o campo está vazio, limpa o FormControl/NgModel
           if (this.ngControl?.control) {
-            this.ngControl.control.setValue('', { emitEvent: false });
+            this.ngControl.control.setValue('', { emitEvent: false, emitModelToViewChange: false });
           }
           if (this.ngModel) {
-            this.ngModel.update.emit('');
+            this.ngModel.viewToModelUpdate('');
           }
         }
       }, 1);
@@ -280,7 +280,7 @@ export class MaskDirective implements OnInit {
    */
   private handleCurrencyInput(inputElement: HTMLInputElement, event: any): void {
     const rawValue = inputElement.value;
-    const config = this.currencyMasks[this.mask.toUpperCase()];
+    const config = this.getCurrencyConfig();
 
     if (!config) return;
 
@@ -289,17 +289,18 @@ export class MaskDirective implements OnInit {
 
     // Se for delete/backspace
     if (event.inputType === 'deleteContentBackward') {
-      // Remove último dígito do valor em centavos
+      // Remove o último dígito do menor fracionamento da moeda (ex: centavos)
       this.currencyValue = Math.floor(this.currencyValue / 10);
     } else if (numbersOnly) {
       // Pega apenas o último dígito digitado
       const lastDigit = numbersOnly.slice(-1);
-      // Adiciona o novo dígito ao valor em centavos
-      this.currencyValue = (this.currencyValue * 10) + parseInt(lastDigit, 10);
+      // Adiciona o novo dígito ao valor no menor fracionamento da moeda
+      this.currencyValue = (this.currencyValue * 10) + Number.parseInt(lastDigit, 10);
 
-      // Limita o valor máximo (99999999,99)
-      if (this.currencyValue > 9999999999) {
-        this.currencyValue = 9999999999;
+      // Limite de segurança para evitar overflow, independente da moeda
+      const maxValue = Math.floor(Number.MAX_SAFE_INTEGER / 10);
+      if (this.currencyValue > maxValue) {
+        this.currencyValue = maxValue;
       }
     }
 
@@ -320,10 +321,10 @@ export class MaskDirective implements OnInit {
 
     // Atualiza o FormControl/NgModel
     if (this.ngControl?.control) {
-      this.ngControl.control.setValue(valueToStore, { emitEvent: false });
+      this.ngControl.control.setValue(valueToStore, { emitEvent: false, emitModelToViewChange: false });
     }
     if (this.ngModel) {
-      this.ngModel.update.emit(valueToStore);
+      this.ngModel.viewToModelUpdate(valueToStore);
     }
 
     this.valueChange.emit(valueToStore);
@@ -338,55 +339,71 @@ export class MaskDirective implements OnInit {
   }
 
   /**
-   * Verifica se a máscara é do tipo moeda
+   * Deriva e armazena em cache a configuração da moeda (símbolo, separadores
+   * e quantidade de decimais) via Intl.NumberFormat, para qualquer código
+   * ISO 4217 válido — sem depender de uma lista fixa de moedas.
    */
-  private isCurrencyMask(): boolean {
-    return this.currencyMasks.hasOwnProperty(this.mask.toUpperCase());
+  private getCurrencyConfig(): CurrencyMaskConfig | null {
+    if (this.currencyConfig === undefined) {
+      this.currencyConfig = MaskDirectiveService.getCurrencyConfig(this.mask, this.currencyLocale);
+    }
+    return this.currencyConfig;
   }
 
   /**
-   * Formata o valor em centavos para exibição
+   * Verifica se a máscara é do tipo moeda
    */
-  private formatCurrencyForDisplay(valueInCents: number): string {
-    const currencyType = this.mask.toUpperCase();
-    const config = this.currencyMasks[currencyType];
+  private isCurrencyMask(): boolean {
+    return this.getCurrencyConfig() !== null;
+  }
+
+  /**
+   * Formata o valor (armazenado no menor fracionamento da moeda) para exibição
+   */
+  private formatCurrencyForDisplay(valueInSmallestUnit: number): string {
+    const config = this.getCurrencyConfig();
 
     if (!config) return '';
 
-    // Separa reais/dólares dos centavos
-    const integerPart = Math.floor(valueInCents / 100);
-    const decimalPart = valueInCents % 100;
+    const factor = 10 ** config.decimalDigits;
+
+    // Separa a parte inteira da parte fracionária (ex: reais/centavos)
+    const integerPart = Math.floor(valueInSmallestUnit / factor);
 
     // Formata a parte inteira com separador de milhares
     const formattedInteger = integerPart
       .toString()
       .replace(/\B(?=(\d{3})+(?!\d))/g, config.thousand);
 
-    // Formata a parte decimal (sempre 2 dígitos)
-    const formattedDecimal = decimalPart.toString().padStart(2, '0');
+    // Moedas sem parte decimal (ex: JPY, KRW) não exibem separador decimal
+    if (config.decimalDigits === 0) {
+      return `${config.prefix}${formattedInteger}`;
+    }
+
+    const decimalPart = valueInSmallestUnit % factor;
+    const formattedDecimal = decimalPart.toString().padStart(config.decimalDigits, '0');
 
     // Retorna o valor formatado com símbolo da moeda
     return `${config.prefix}${formattedInteger}${config.decimal}${formattedDecimal}`;
   }
 
   /**
-   * Converte valor inicial para centavos
+   * Converte valor inicial para o menor fracionamento da moeda
    */
   private parseInitialCurrencyValue(value: any): number {
     if (!value) return 0;
 
     const stringValue = this.safeToString(value);
 
-    // Se já for um número (centavos), retorna direto
+    // Se já for um número no menor fracionamento da moeda, retorna direto
     if (this.dropSpecialCharacters && /^\d+$/.test(stringValue)) {
-      return parseInt(stringValue, 10);
+      return Number.parseInt(stringValue, 10);
     }
 
     // Se for formatado, extrai apenas números
     const numbersOnly = stringValue.replace(/\D/g, '');
 
-    // Assume que os últimos 2 dígitos são centavos
-    return parseInt(numbersOnly || '0', 10);
+    return Number.parseInt(numbersOnly || '0', 10);
   }
 
   @HostListener('blur')
@@ -443,37 +460,24 @@ export class MaskDirective implements OnInit {
    * Adiciona validator a um control específico
    */
   private addValidatorToControl(control: any): void {
-    if (!control) {
+    // 🔧 CORREÇÃO: usa uma flag simples em vez de testar o validator com um
+    // valor vazio (o validator sempre retorna null para valor vazio, então
+    // esse teste nunca detectava que o validator já tinha sido adicionado).
+    // Sem essa flag, o validator era reempilhado e updateValueAndValidity()
+    // era chamado a cada tecla digitada, disparando o valueChanges do
+    // ngOnInit com o valor antigo do control e sobrescrevendo o valor recém
+    // digitado no input.
+    if (!control || this.validatorApplied) {
       return;
     }
 
-    // Verifica se já tem validator de máscara para evitar duplicação
-    const existingValidators = control.validator;
-
-    // Verifica se já tem validator de máscara testando com um valor vazio
-    if (existingValidators) {
-      const testControl = { value: '', touched: true, dirty: true };
-      const errors = existingValidators(testControl);
-
-      // Só pula se realmente tem o validator de máscara E está funcionando
-      if (errors && errors['maskPatternInvalid']) {
-        // Testa com um valor inválido para ver se o validator está funcionando
-        const testInvalidControl = { value: '123', touched: true, dirty: true };
-        const invalidErrors = existingValidators(testInvalidControl);
-
-        if (invalidErrors && invalidErrors['maskPatternInvalid']) {
-          return; // Já tem validator de máscara funcionando
-        }
-      }
-    }
-
-    // Adiciona o validator baseado na máscara
     const currentValidators = control.validator ? [control.validator] : [];
     const maskValidator = MaskDirectiveService.maskPatternValidator(this.mask);
 
-    // Aplica os validators mantendo os existentes
     control.setValidators([...currentValidators, maskValidator]);
-    control.updateValueAndValidity();
+    control.updateValueAndValidity({ emitEvent: false });
+
+    this.validatorApplied = true;
   }
 
   /**

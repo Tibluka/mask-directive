@@ -1,39 +1,217 @@
-<form [formGroup]="form">
-    <input libMask="(00) 0000-0000||(00) 00000-0000" formControlName="to" [dropSpecialCharacters]="false" />
-</form>
-<h1>{{ form.get('to')!.value }}</h1>
-Valid: {{ form.get('to')!.valid }}
+<div class="mask-demo">
+  <h1 class="mask-demo__title">mask-directive — playground de testes</h1>
 
-<h1>Teletone do cliente: {{ (form.get('to')!.value || '') | libPipe: '(00) 0000-0000||(00) 00000-0000' }}</h1>
+  <!-- ===================================================================== -->
+  <!-- 1. Reactive Forms (formControlName) — máscaras de padrão -->
+  <!-- ===================================================================== -->
+  <section class="mask-demo__section">
+    <h2 class="mask-demo__section-title">1. Reactive Forms (formControlName)</h2>
 
-<button (click)="click()">log Teletone</button>
+    <form class="mask-demo__form" [formGroup]="form">
+      <div class="mask-demo__field">
+        <label class="mask-demo__label" for="telefone">Telefone (múltiplas máscaras "||", dropSpecialCharacters=true)</label>
+        <input
+          id="telefone"
+          class="mask-demo__input"
+          libMask="(00) 0000-0000||(00) 00000-0000"
+          formControlName="telefone"
+          [dropSpecialCharacters]="true"
+          placeholder="(00) 00000-0000"
+        />
+        <p class="mask-demo__hint">Aceita fixo (10 dígitos) ou celular (11 dígitos)</p>
+        <p class="mask-demo__value">Valor no FormControl: <strong>{{ form.get('telefone')!.value }}</strong></p>
+        <p class="mask-demo__value">Formatado via pipe: <strong>{{ (form.get('telefone')!.value || '') | libPipe: '(00) 0000-0000||(00) 00000-0000' }}</strong></p>
+        <span class="mask-demo__badge" [class.mask-demo__badge--valid]="form.get('telefone')!.valid" [class.mask-demo__badge--invalid]="form.get('telefone')!.invalid">
+          {{ form.get('telefone')!.valid ? 'válido' : 'inválido' }}
+        </span>
+      </div>
 
-<div>
-    <input libMask="000.000.000-00" [dropSpecialCharacters]="false" [(ngModel)]="cpf" />
-    <h1>NgModel: {{ cpf }}</h1>
-</div>
+      <div class="mask-demo__field">
+        <label class="mask-demo__label" for="placa">Placa antiga (somente letras "A" + números, dropSpecialCharacters=false)</label>
+        <input
+          id="placa"
+          class="mask-demo__input"
+          libMask="AAA-0000"
+          formControlName="placa"
+          [dropSpecialCharacters]="false"
+          placeholder="ABC-1234"
+        />
+        <p class="mask-demo__value">Valor no FormControl: <strong>{{ form.get('placa')!.value }}</strong></p>
+      </div>
 
-<hr>
+      <div class="mask-demo__field">
+        <label class="mask-demo__label" for="placaMercosul">Placa Mercosul (alfanumérico misto "A" + "0", sem separador)</label>
+        <input
+          id="placaMercosul"
+          class="mask-demo__input"
+          libMask="AAA0A00"
+          formControlName="placaMercosul"
+          [dropSpecialCharacters]="false"
+          placeholder="ABC1D23"
+        />
+        <p class="mask-demo__value">Valor no FormControl: <strong>{{ form.get('placaMercosul')!.value }}</strong></p>
+      </div>
 
-<h2>💰 Máscaras de Moeda</h2>
+      <div class="mask-demo__field">
+        <label class="mask-demo__label" for="valorBRLForm">Moeda dentro de Reactive Forms (BRL via formControlName)</label>
+        <input
+          id="valorBRLForm"
+          class="mask-demo__input"
+          libMask="BRL"
+          formControlName="valorBRLForm"
+          [dropSpecialCharacters]="true"
+        />
+        <p class="mask-demo__value">Valor no FormControl (centavos): <strong>{{ form.get('valorBRLForm')!.value }}</strong></p>
+        <p class="mask-demo__value">Formatado via pipe: <strong>{{ (form.get('valorBRLForm')!.value || '') | libPipe: 'BRL' }}</strong></p>
+      </div>
 
-<div>
-    <h3>Real Brasileiro (BRL)</h3>
-    <input libMask="BRL" [dropSpecialCharacters]="false" [(ngModel)]="valorBRL" />
-    <p>Valor armazenado: {{ valorBRL }}</p>
-    <p>Valor formatado: {{ valorBRL | libPipe: 'BRL' }}</p>
-</div>
+      <div class="mask-demo__actions">
+        <button class="mask-demo__button" type="button" (click)="logForm()">Logar form no console</button>
+        <span class="mask-demo__badge" [class.mask-demo__badge--valid]="form.valid" [class.mask-demo__badge--invalid]="form.invalid">
+          Form {{ form.valid ? 'válido' : 'inválido' }}
+        </span>
+      </div>
+    </form>
+  </section>
 
-<div>
-    <h3>Dólar Americano (USD)</h3>
-    <input libMask="USD" [dropSpecialCharacters]="true" [(ngModel)]="valorUSD" />
-    <p>Valor armazenado: {{ valorUSD }}</p>
-    <p>Valor formatado: {{ valorUSD | libPipe: 'USD' }}</p>
-</div>
+  <hr class="mask-demo__divider" />
 
-<div>
-    <h3>Euro (EUR)</h3>
-    <input libMask="EUR" [dropSpecialCharacters]="false" [(ngModel)]="valorEUR" />
-    <p>Valor armazenado: {{ valorEUR }}</p>
-    <p>Valor formatado: {{ valorEUR | libPipe: 'EUR' }}</p>
+  <!-- ===================================================================== -->
+  <!-- 2. Template-driven Forms (ngModel) — máscaras de padrão -->
+  <!-- ===================================================================== -->
+  <section class="mask-demo__section">
+    <h2 class="mask-demo__section-title">2. Template-driven (ngModel)</h2>
+
+    <div class="mask-demo__field">
+      <label class="mask-demo__label" for="cpf">CPF (dropSpecialCharacters=false, mantém pontuação no valor)</label>
+      <input
+        id="cpf"
+        class="mask-demo__input"
+        libMask="000.000.000-00"
+        [dropSpecialCharacters]="false"
+        [(ngModel)]="cpf"
+        #cpfModel="ngModel"
+        placeholder="000.000.000-00"
+      />
+      <p class="mask-demo__value">Valor via ngModel: <strong>{{ cpf }}</strong></p>
+      <span class="mask-demo__badge" [class.mask-demo__badge--valid]="cpfModel.valid" [class.mask-demo__badge--invalid]="cpfModel.invalid">
+        {{ cpfModel.valid ? 'válido' : 'inválido' }}
+      </span>
+    </div>
+
+    <div class="mask-demo__field">
+      <label class="mask-demo__label" for="codigoSku">Código alfanumérico "*" (letras e números, dropSpecialCharacters=false)</label>
+      <input
+        id="codigoSku"
+        class="mask-demo__input"
+        libMask="***-****"
+        [dropSpecialCharacters]="false"
+        [(ngModel)]="codigoSku"
+        placeholder="AB1-23CD"
+      />
+      <p class="mask-demo__value">Valor via ngModel: <strong>{{ codigoSku }}</strong></p>
+    </div>
+
+    <div class="mask-demo__field">
+      <label class="mask-demo__label" for="numeroSemMascara">Campo type="number" com libMask (proteção: máscara deve ser ignorada)</label>
+      <input
+        id="numeroSemMascara"
+        class="mask-demo__input"
+        type="number"
+        libMask="000.000.000-00"
+        [(ngModel)]="numeroSemMascara"
+      />
+      <p class="mask-demo__value">Valor via ngModel: <strong>{{ numeroSemMascara }}</strong></p>
+    </div>
+  </section>
+
+  <hr class="mask-demo__divider" />
+
+  <!-- ===================================================================== -->
+  <!-- 3. Máscaras de moeda — qualquer código ISO 4217 (via Intl.NumberFormat) -->
+  <!-- ===================================================================== -->
+  <section class="mask-demo__section">
+    <h2 class="mask-demo__section-title">3. Máscaras de moeda (todas as ISO 4217)</h2>
+
+    <div class="mask-demo__grid">
+      <div class="mask-demo__field">
+        <h3 class="mask-demo__field-title">Real Brasileiro (BRL) — locale padrão pt-BR</h3>
+        <label class="mask-demo__label" for="valorBRL">Valor</label>
+        <input id="valorBRL" class="mask-demo__input" libMask="BRL" [dropSpecialCharacters]="false" [(ngModel)]="valorBRL" />
+        <p class="mask-demo__value">Armazenado: <strong>{{ valorBRL }}</strong></p>
+        <p class="mask-demo__value">Pipe: <strong>{{ valorBRL | libPipe: 'BRL' }}</strong></p>
+      </div>
+
+      <div class="mask-demo__field">
+        <h3 class="mask-demo__field-title">Dólar (USD) — currencyLocale="en-US" (estilo $1,234.56)</h3>
+        <label class="mask-demo__label" for="valorUSD">Valor</label>
+        <input id="valorUSD" class="mask-demo__input" libMask="USD" [currencyLocale]="'en-US'" [dropSpecialCharacters]="true" [(ngModel)]="valorUSD" />
+        <p class="mask-demo__value">Armazenado: <strong>{{ valorUSD }}</strong></p>
+        <p class="mask-demo__value">Pipe: <strong>{{ valorUSD | libPipe: 'USD':'en-US' }}</strong></p>
+      </div>
+
+      <div class="mask-demo__field">
+        <h3 class="mask-demo__field-title">Euro (EUR) — locale padrão pt-BR</h3>
+        <label class="mask-demo__label" for="valorEUR">Valor</label>
+        <input id="valorEUR" class="mask-demo__input" libMask="EUR" [dropSpecialCharacters]="false" [(ngModel)]="valorEUR" />
+        <p class="mask-demo__value">Armazenado: <strong>{{ valorEUR }}</strong></p>
+        <p class="mask-demo__value">Pipe: <strong>{{ valorEUR | libPipe: 'EUR' }}</strong></p>
+      </div>
+
+      <div class="mask-demo__field">
+        <h3 class="mask-demo__field-title">Iene Japonês (JPY) — 0 casas decimais</h3>
+        <label class="mask-demo__label" for="valorJPY">Valor</label>
+        <input id="valorJPY" class="mask-demo__input" libMask="JPY" [dropSpecialCharacters]="true" [(ngModel)]="valorJPY" />
+        <p class="mask-demo__value">Armazenado: <strong>{{ valorJPY }}</strong></p>
+        <p class="mask-demo__value">Pipe: <strong>{{ valorJPY | libPipe: 'JPY' }}</strong></p>
+      </div>
+
+      <div class="mask-demo__field">
+        <h3 class="mask-demo__field-title">Franco Suíço (CHF)</h3>
+        <label class="mask-demo__label" for="valorCHF">Valor</label>
+        <input id="valorCHF" class="mask-demo__input" libMask="CHF" [dropSpecialCharacters]="false" [(ngModel)]="valorCHF" />
+        <p class="mask-demo__value">Armazenado: <strong>{{ valorCHF }}</strong></p>
+        <p class="mask-demo__value">Pipe: <strong>{{ valorCHF | libPipe: 'CHF' }}</strong></p>
+      </div>
+
+      <div class="mask-demo__field">
+        <h3 class="mask-demo__field-title">Libra Esterlina (GBP) — locale padrão pt-BR</h3>
+        <label class="mask-demo__label" for="valorGBP">Valor</label>
+        <input id="valorGBP" class="mask-demo__input" libMask="GBP" [dropSpecialCharacters]="false" [(ngModel)]="valorGBP" />
+        <p class="mask-demo__value">Armazenado: <strong>{{ valorGBP }}</strong></p>
+        <p class="mask-demo__value">Pipe: <strong>{{ valorGBP | libPipe: 'GBP' }}</strong></p>
+      </div>
+
+      <div class="mask-demo__field">
+        <h3 class="mask-demo__field-title">Libra Esterlina (GBP) — currencyLocale="en-GB" (mesma moeda, outro locale)</h3>
+        <label class="mask-demo__label" for="valorGBPBritanico">Valor</label>
+        <input id="valorGBPBritanico" class="mask-demo__input" libMask="GBP" [currencyLocale]="'en-GB'" [dropSpecialCharacters]="false" [(ngModel)]="valorGBPBritanico" />
+        <p class="mask-demo__value">Armazenado: <strong>{{ valorGBPBritanico }}</strong></p>
+        <p class="mask-demo__value">Pipe: <strong>{{ valorGBPBritanico | libPipe: 'GBP':'en-GB' }}</strong></p>
+      </div>
+
+      <div class="mask-demo__field">
+        <h3 class="mask-demo__field-title">Dinar Kuwaitiano (KWD) — 3 casas decimais</h3>
+        <label class="mask-demo__label" for="valorKWD">Valor</label>
+        <input id="valorKWD" class="mask-demo__input" libMask="KWD" [dropSpecialCharacters]="true" [(ngModel)]="valorKWD" />
+        <p class="mask-demo__value">Armazenado: <strong>{{ valorKWD }}</strong></p>
+        <p class="mask-demo__value">Pipe: <strong>{{ valorKWD | libPipe: 'KWD' }}</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="mask-demo__divider" />
+
+  <!-- ===================================================================== -->
+  <!-- 4. Aplicação programática (valor inicial / setValue externo) -->
+  <!-- ===================================================================== -->
+  <section class="mask-demo__section">
+    <h2 class="mask-demo__section-title">4. Valor definido programaticamente</h2>
+    <p class="mask-demo__hint">Verifica se a máscara é aplicada quando o valor chega de fora (patchValue / atribuição direta), não só ao digitar.</p>
+
+    <div class="mask-demo__actions">
+      <button class="mask-demo__button" type="button" (click)="definirValoresProgramaticamente()">Preencher via patchValue / atribuição</button>
+      <button class="mask-demo__button mask-demo__button--secondary" type="button" (click)="limparTudo()">Limpar tudo</button>
+    </div>
+  </section>
 </div>

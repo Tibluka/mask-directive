@@ -9,30 +9,68 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 })
 export class AppComponent {
 
-  form = new FormGroup({
-    to: new FormControl('', [Validators.required])
-  })
-
   title = 'testing2';
-  cpf: string = '';
 
-  // Propriedades para máscaras de moeda
+  // ---------------------------------------------------------------------
+  // Reactive Forms (formControlName) — máscaras de padrão e de moeda
+  // ---------------------------------------------------------------------
+  form = new FormGroup({
+    telefone: new FormControl('', [Validators.required]),
+    placa: new FormControl(''),
+    placaMercosul: new FormControl(''),
+    valorBRLForm: new FormControl(''),
+  });
+
+  // ---------------------------------------------------------------------
+  // Template-driven (ngModel) — máscaras de padrão
+  // ---------------------------------------------------------------------
+  cpf: string = '';
+  codigoSku: string = '';
+  numeroSemMascara: string = '';
+
+  // ---------------------------------------------------------------------
+  // Template-driven (ngModel) — máscaras de moeda (qualquer ISO 4217)
+  // ---------------------------------------------------------------------
   valorBRL: string = '';
   valorUSD: string = '';
   valorEUR: string = '';
+  valorJPY: string = '';
+  valorCHF: string = '';
+  valorGBP: string = '';
+  valorGBPBritanico: string = '';
+  valorKWD: string = '';
 
-
-  click() {
+  logForm(): void {
     console.log('Form Values:', this.form.value);
     console.log('Form Valid:', this.form.valid);
-    console.log('Form Errors:', this.form.errors);
-    console.log('Individual Field Errors:');
-    console.log('- Telefone:', this.form.get('to')?.errors);
-    console.log('- CPF:', this.form.get('cpf')?.errors);
-    console.log('- Valor BRL:', this.form.get('valorBRL')?.errors);
+    console.log('Form Errors:');
+    console.log('- Telefone:', this.form.get('telefone')?.errors);
+    console.log('- Placa:', this.form.get('placa')?.errors);
+    console.log('- Valor BRL (form):', this.form.get('valorBRLForm')?.errors);
   }
 
-  update(ev: any) {
-    debugger
+  definirValoresProgramaticamente(): void {
+    this.form.patchValue({
+      telefone: '11912345678',
+      placa: 'ABC1234',
+      valorBRLForm: '987654',
+    });
+    this.cpf = '52998224725';
+    this.valorBRL = '250050';
+  }
+
+  limparTudo(): void {
+    this.form.reset();
+    this.cpf = '';
+    this.codigoSku = '';
+    this.numeroSemMascara = '';
+    this.valorBRL = '';
+    this.valorUSD = '';
+    this.valorEUR = '';
+    this.valorJPY = '';
+    this.valorCHF = '';
+    this.valorGBP = '';
+    this.valorGBPBritanico = '';
+    this.valorKWD = '';
   }
 }
