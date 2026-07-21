@@ -1,6 +1,7 @@
 import { Directive, ElementRef, EventEmitter, HostListener, Input, Optional, Output, OnInit } from '@angular/core';
 import { NgControl, NgModel } from '@angular/forms';
 import { CurrencyMaskConfig, MaskDirectiveService } from './mask-directive.service';
+import { maskPatternValidator } from './mask-pattern.validator';
 
 @Directive({
   selector: '[libMask]',
@@ -45,7 +46,7 @@ export class MaskDirective implements OnInit {
     // 💰 Se for máscara de moeda, aplicar valor inicial e sair
     if (this.isCurrencyMask()) {
       // Aplica valor inicial se existir
-      if (this.ngControl?.value != null && this.el?.nativeElement) {
+      if (this.ngControl && this.ngControl.value != null && this.el && this.el.nativeElement) {
         const value = this.parseInitialCurrencyValue(this.ngControl.value);
         this.currencyValue = value;
         this.el.nativeElement.value = this.formatCurrencyForDisplay(value);
@@ -55,34 +56,37 @@ export class MaskDirective implements OnInit {
 
     // Lógica para máscaras convencionais (telefone, CPF, etc)
     if (this.ngModel) {
-      this.ngModel.valueChanges?.subscribe(value => {
-        if (this.isValidValue(value)) {
-          const stringValue = this.safeToString(value);
-          const initialValue = stringValue.replace(/[^a-zA-Z0-9]/g, '');
-          const masks = this.mask.split('||');
-          const selectedMask = this.selectMask(masks, initialValue.length);
-          if (selectedMask && this.el?.nativeElement) {
-            this.el.nativeElement.value = this.applyMask(initialValue, selectedMask);
+      const modelValueChanges = this.ngModel.valueChanges;
+      if (modelValueChanges) {
+        modelValueChanges.subscribe(value => {
+          if (this.isValidValue(value)) {
+            const stringValue = this.safeToString(value);
+            const initialValue = stringValue.replace(/[^a-zA-Z0-9]/g, '');
+            const masks = this.mask.split('||');
+            const selectedMask = this.selectMask(masks, initialValue.length);
+            if (selectedMask && this.el && this.el.nativeElement) {
+              this.el.nativeElement.value = this.applyMask(initialValue, selectedMask);
+            }
           }
-        }
-      });
+        });
+      }
     }
 
-    if (this.ngControl?.control) {
-      this.ngControl.control.valueChanges?.subscribe(value => {
+    if (this.ngControl && this.ngControl.control) {
+      this.ngControl.control.valueChanges.subscribe(value => {
         if (this.isValidValue(value)) {
           const stringValue = this.safeToString(value);
           const initialValue = stringValue.replace(/[^a-zA-Z0-9]/g, '');
           const masks = this.mask.split('||');
           const selectedMask = this.selectMask(masks, initialValue.length);
-          if (selectedMask && this.el?.nativeElement) {
+          if (selectedMask && this.el && this.el.nativeElement) {
             this.el.nativeElement.value = this.applyMask(initialValue, selectedMask);
           }
         }
       });
 
       // 🔧 CORREÇÃO: Verificação inicial segura
-      if (this.ngControl.value != null && this.el?.nativeElement) {
+      if (this.ngControl.value != null && this.el && this.el.nativeElement) {
         const stringValue = this.safeToString(this.ngControl.value);
         const initialValue = stringValue.replace(/[^a-zA-Z0-9]/g, '');
         if (initialValue) {
@@ -106,7 +110,7 @@ export class MaskDirective implements OnInit {
     // 🎯 Tenta adicionar validator se ainda não foi adicionado
     this.tryAddValidator();
 
-    const inputElement = this.el?.nativeElement;
+    const inputElement = this.el && this.el.nativeElement;
     if (!inputElement) return;
 
     const rawValue = inputElement.value;
@@ -138,7 +142,7 @@ export class MaskDirective implements OnInit {
       this.valueChange.emit(cleanedInputValue);
 
       // Atualiza o FormControl/NgModel com o valor limpo
-      if (this.ngControl?.control) {
+      if (this.ngControl && this.ngControl.control) {
         this.ngControl.control.setValue(cleanedInputValue, { emitEvent: false, emitModelToViewChange: false });
       }
       if (this.ngModel) {
@@ -149,7 +153,7 @@ export class MaskDirective implements OnInit {
       this.valueChange.emit(inputElement.value);
 
       // Atualiza o FormControl/NgModel com o valor formatado
-      if (this.ngControl?.control) {
+      if (this.ngControl && this.ngControl.control) {
         this.ngControl.control.setValue(inputElement.value, { emitEvent: false, emitModelToViewChange: false });
       }
       if (this.ngModel) {
@@ -172,14 +176,14 @@ export class MaskDirective implements OnInit {
             // Atualiza o FormControl/NgModel com o valor corrigido
             if (this.dropSpecialCharacters) {
               const cleanedValue = updatedValue.replace(/[^a-zA-Z0-9]/g, '');
-              if (this.ngControl?.control) {
+              if (this.ngControl && this.ngControl.control) {
                 this.ngControl.control.setValue(cleanedValue, { emitEvent: false, emitModelToViewChange: false });
               }
               if (this.ngModel) {
                 this.ngModel.viewToModelUpdate(cleanedValue);
               }
             } else {
-              if (this.ngControl?.control) {
+              if (this.ngControl && this.ngControl.control) {
                 this.ngControl.control.setValue(updatedValue, { emitEvent: false, emitModelToViewChange: false });
               }
               if (this.ngModel) {
@@ -189,7 +193,7 @@ export class MaskDirective implements OnInit {
           }
         } else {
           // Se o campo está vazio, limpa o FormControl/NgModel
-          if (this.ngControl?.control) {
+          if (this.ngControl && this.ngControl.control) {
             this.ngControl.control.setValue('', { emitEvent: false, emitModelToViewChange: false });
           }
           if (this.ngModel) {
@@ -219,7 +223,7 @@ export class MaskDirective implements OnInit {
     if (typeof value === 'boolean') return value.toString();
     try {
       return String(value);
-    } catch {
+    } catch (_) {
       return '';
     }
   }
@@ -228,7 +232,7 @@ export class MaskDirective implements OnInit {
    * Verifica se é um campo numérico (para não aplicar máscara)
    */
   private isNumericField(): boolean {
-    return this.el?.nativeElement?.type === 'number';
+    return !!this.el && !!this.el.nativeElement && this.el.nativeElement.type === 'number';
   }
 
   // Seleciona a máscara com base no tamanho do valor
@@ -320,7 +324,7 @@ export class MaskDirective implements OnInit {
     }
 
     // Atualiza o FormControl/NgModel
-    if (this.ngControl?.control) {
+    if (this.ngControl && this.ngControl.control) {
       this.ngControl.control.setValue(valueToStore, { emitEvent: false, emitModelToViewChange: false });
     }
     if (this.ngModel) {
@@ -410,7 +414,7 @@ export class MaskDirective implements OnInit {
   onBlur(): void {
     // Garante que o valor mínimo seja R$ 0,00 quando sair do campo
     if (this.isCurrencyMask() && this.currencyValue === 0) {
-      const inputElement = this.el?.nativeElement;
+      const inputElement = this.el && this.el.nativeElement;
       if (inputElement) {
         inputElement.value = this.formatCurrencyForDisplay(0);
       }
@@ -422,7 +426,7 @@ export class MaskDirective implements OnInit {
     // Seleciona todo o texto ao focar no campo de moeda
     if (this.isCurrencyMask()) {
       setTimeout(() => {
-        const inputElement = this.el?.nativeElement;
+        const inputElement = this.el && this.el.nativeElement;
         if (inputElement && typeof inputElement.select === 'function') {
           inputElement.select();
         }
@@ -435,22 +439,22 @@ export class MaskDirective implements OnInit {
    */
   private addAutomaticValidator(): void {
     // Tenta com NgControl primeiro
-    if (this.ngControl?.control) {
+    if (this.ngControl && this.ngControl.control) {
       this.addValidatorToControl(this.ngControl.control);
       return;
     }
 
     // Se não tem NgControl, tenta com NgModel
-    if (this.ngModel?.control) {
+    if (this.ngModel && this.ngModel.control) {
       this.addValidatorToControl(this.ngModel.control);
       return;
     }
 
     // Se não tem nenhum dos dois, aguarda um pouco e tenta novamente
     setTimeout(() => {
-      if (this.ngControl?.control) {
+      if (this.ngControl && this.ngControl.control) {
         this.addValidatorToControl(this.ngControl.control);
-      } else if (this.ngModel?.control) {
+      } else if (this.ngModel && this.ngModel.control) {
         this.addValidatorToControl(this.ngModel.control);
       }
     }, 100);
@@ -472,7 +476,7 @@ export class MaskDirective implements OnInit {
     }
 
     const currentValidators = control.validator ? [control.validator] : [];
-    const maskValidator = MaskDirectiveService.maskPatternValidator(this.mask);
+    const maskValidator = maskPatternValidator(this.mask);
 
     control.setValidators([...currentValidators, maskValidator]);
     control.updateValueAndValidity({ emitEvent: false });
@@ -485,13 +489,13 @@ export class MaskDirective implements OnInit {
    */
   private tryAddValidator(): void {
     // Tenta com NgControl primeiro
-    if (this.ngControl?.control) {
+    if (this.ngControl && this.ngControl.control) {
       this.addValidatorToControl(this.ngControl.control);
       return;
     }
 
     // Se não tem NgControl, tenta com NgModel
-    if (this.ngModel?.control) {
+    if (this.ngModel && this.ngModel.control) {
       this.addValidatorToControl(this.ngModel.control);
       return;
     }

@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
 export interface CurrencyMaskConfig {
   symbol: string;
@@ -9,6 +8,20 @@ export interface CurrencyMaskConfig {
   decimalDigits: number;
 }
 
+// Intl.NumberFormat.formatToParts não está tipado nas lib.d.ts do TypeScript
+// ~3.5 (exigido pelo Angular 8), embora exista em todo runtime com suporte a
+// Intl. Declaramos aqui um contrato mínimo para manter a tipagem sem depender
+// de uma versão mais nova do TypeScript.
+interface NumberFormatPart {
+  type: string;
+  value: string;
+}
+
+interface NumberFormatWithParts {
+  formatToParts(value: number): NumberFormatPart[];
+}
+
+/** @dynamic */
 @Injectable({
   providedIn: 'root'
 })
@@ -26,7 +39,7 @@ export class MaskDirectiveService {
     try {
       new Intl.NumberFormat(undefined, { style: 'currency', currency: code.toUpperCase() });
       return true;
-    } catch {
+    } catch (_) {
       return false;
     }
   }
@@ -43,12 +56,17 @@ export class MaskDirectiveService {
 
     try {
       const formatter = new Intl.NumberFormat(locale, { style: 'currency', currency: currencyCode });
-      const parts = formatter.formatToParts(1234.56);
+      const parts = (formatter as unknown as NumberFormatWithParts).formatToParts(1234.56);
 
-      const symbol = parts.find(part => part.type === 'currency')?.value ?? currencyCode;
-      const decimal = parts.find(part => part.type === 'decimal')?.value ?? ',';
-      const thousand = parts.find(part => part.type === 'group')?.value ?? '.';
-      const decimalDigits = formatter.resolvedOptions().maximumFractionDigits ?? 2;
+      const symbolPart = parts.find(part => part.type === 'currency');
+      const decimalPart = parts.find(part => part.type === 'decimal');
+      const thousandPart = parts.find(part => part.type === 'group');
+      const resolvedMaxFractionDigits = formatter.resolvedOptions().maximumFractionDigits;
+
+      const symbol = symbolPart ? symbolPart.value : currencyCode;
+      const decimal = decimalPart ? decimalPart.value : ',';
+      const thousand = thousandPart ? thousandPart.value : '.';
+      const decimalDigits = resolvedMaxFractionDigits != null ? resolvedMaxFractionDigits : 2;
 
       return {
         symbol,
@@ -57,82 +75,9 @@ export class MaskDirectiveService {
         thousand,
         decimalDigits,
       };
-    } catch {
+    } catch (_) {
       return null;
     }
-  }
-
-  /**
-   * Cria um validator que valida contra padrões específicos de máscara
-   */
-  static maskPatternValidator(maskPattern: string): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors | null => {
-      // Se não tem valor ou está vazio, não valida (deixa outros validators como required fazerem seu trabalho)
-      if (!control.value || control.value === '') return null;
-
-      const value = control.value.toString();
-
-      // Divide os padrões de máscara pelo delimitador "||"
-      const patterns = maskPattern.split('||');
-
-      // Verifica se o valor corresponde a algum dos padrões
-      const isValid = patterns.some(pattern => {
-        return this.matchesPattern(value, pattern);
-      });
-
-      if (!isValid) {
-        return {
-          maskPatternInvalid: {
-            value: control.value,
-            expectedPatterns: patterns
-          }
-        };
-      }
-
-      return null;
-    };
-  }
-
-  /**
-   * Verifica se o valor corresponde ao padrão da máscara
-   */
-  private static matchesPattern(value: string, pattern: string): boolean {
-    if (!value || !pattern) return false;
-
-    // Remove caracteres especiais do valor para comparar apenas com números/letras
-    const cleanValue = value.replace(/[^a-zA-Z0-9]/g, '');
-    const cleanPattern = pattern.replace(/[^0A*]/g, '');
-
-    // Verifica se o comprimento do valor limpo corresponde ao padrão
-    if (cleanValue.length !== cleanPattern.length) {
-      return false;
-    }
-
-    // Verifica se cada caractere do valor corresponde ao padrão
-    for (let i = 0; i < cleanValue.length; i++) {
-      const valueChar = cleanValue[i];
-      const patternChar = cleanPattern[i];
-
-      if (patternChar === '0' && !/\d/.test(valueChar)) {
-        return false; // Deve ser número
-      }
-      if (patternChar === 'A' && !/[a-zA-Z]/.test(valueChar)) {
-        return false; // Deve ser letra
-      }
-      if (patternChar === '*' && !/[a-zA-Z0-9]/.test(valueChar)) {
-        return false; // Deve ser letra ou número
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Cria um validator que funciona com qualquer máscara
-   * Use este método quando a validação automática não funcionar
-   */
-  static createMaskValidator(maskPattern: string): ValidatorFn {
-    return this.maskPatternValidator(maskPattern);
   }
 
 }
