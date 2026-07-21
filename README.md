@@ -1,28 +1,47 @@
-# MaskDirective
-
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 13.1.2.
-
-## Development server
-
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
-
-## Code scaffolding
-
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
-
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
 # mask-directive
+
+Workspace de desenvolvimento da biblioteca Angular **mask-directive** — máscaras de input, moedas ISO 4217 e pipe de formatação.
+
+A documentação completa da lib (instalação, API e exemplos para todas as versões do Angular) está em [`projects/mask-directive/README.md`](projects/mask-directive/README.md).
+
+## Versões publicadas no npm
+
+| Tag npm | Angular alvo | Instalação |
+|---|---|---|
+| `angular-8` | 8.x | `npm install mask-directive@angular-8` |
+| `angular-13` | 13.x | `npm install mask-directive@angular-13` |
+| `latest` | 19+ | `npm install mask-directive@latest` |
+
+## Desenvolvimento local
+
+```bash
+# instalar dependências (Angular 19 — ambiente padrão do workspace)
+npm install
+
+# build da biblioteca
+npm run build
+
+# playground de testes
+npm run start
+```
+
+## Publicar no npm
+
+```bash
+./publish.sh
+```
+
+Requisitos:
+
+- `jq` instalado
+- `npm login` com a conta mantenedora do pacote
+- Node 14 recomendado para publicar a tag `angular-8`
+
+## Estrutura
+
+```
+projects/
+  mask-directive/   # biblioteca publicada no npm
+  testing2/         # app de testes (playground)
+publish.sh          # script de publicação multi-versão
+```
