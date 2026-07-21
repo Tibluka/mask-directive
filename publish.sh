@@ -121,6 +121,21 @@ restore_files() {
   echo -e "${GREEN}✅ Arquivos restaurados${NC}"
 }
 
+# Retorna a maior versão semver publicada no registry (independente da tag)
+get_highest_published_version() {
+  local package_name=$1
+  local versions_json
+
+  versions_json=$(run_npm view "$package_name" versions --json 2>/dev/null)
+
+  if [ -z "$versions_json" ]; then
+    echo ""
+    return
+  fi
+
+  echo "$versions_json" | jq -r 'if type == "array" then .[-1] else . end' 2>/dev/null | tr -d '[:space:]'
+}
+
 # Função para obter a próxima versão disponível do NPM
 get_next_available_version() {
   local current_version=$1
@@ -128,20 +143,20 @@ get_next_available_version() {
   
   echo -e "${YELLOW}🔍 Verificando versões publicadas no NPM...${NC}" >&2
   
-  local latest_published
-  latest_published=$(run_npm view "$package_name" version 2>/dev/null | tr -d '[:space:]')
+  local highest_published
+  highest_published=$(get_highest_published_version "$package_name")
   
-  if [ -z "$latest_published" ]; then
+  if [ -z "$highest_published" ]; then
     echo -e "${YELLOW}⚠️  Não foi possível obter versões do NPM. Usando versão local: $current_version${NC}" >&2
     echo "$current_version"
     return
   fi
   
-  echo -e "${BLUE}📋 Última versão no NPM: $latest_published${NC}" >&2
+  echo -e "${BLUE}📋 Maior versão publicada no NPM: $highest_published${NC}" >&2
   
-  # Parse da versão local e da última publicada (major.minor.patch)
+  # Parse da versão local e da maior publicada (major.minor.patch)
   IFS='.' read -r local_major local_minor local_patch <<< "$current_version"
-  IFS='.' read -r latest_major latest_minor latest_patch <<< "$latest_published"
+  IFS='.' read -r latest_major latest_minor latest_patch <<< "$highest_published"
   
   local major=$local_major
   local minor=$local_minor
@@ -666,8 +681,14 @@ echo -e "${YELLOW}Versão a ser publicada: $NEW_VERSION${NC}"
 
 # Verificar se versão já existe antes de publicar (confere o valor retornado, não só exit code)
 if is_version_published "mask-directive" "$NEW_VERSION"; then
+  echo -e "${YELLOW}⚠️  Versão $NEW_VERSION foi publicada enquanto o build rodava.${NC}"
+  NEW_VERSION=$(get_next_available_version "$NEW_VERSION")
+  echo -e "${BLUE}📋 Nova versão para publicação: $NEW_VERSION${NC}"
+  jq --arg version "$NEW_VERSION" '.version = $version' package.json > temp_pkg.json && mv temp_pkg.json package.json
+fi
+
+if is_version_published "mask-directive" "$NEW_VERSION"; then
   echo -e "${RED}❌ Versão $NEW_VERSION já existe no NPM!${NC}"
-  echo -e "${YELLOW}💡 Rode ./publish.sh novamente para obter a próxima versão disponível.${NC}"
   cd ../..
   restore_files
   exit 1
